@@ -22,10 +22,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r frontend/requirements.txt -r worker/requirements.txt -r requirements-dev.txt
-      - name: Compile and test
-        run: |
-          python -m compileall -q frontend worker shared scripts tests
-          pytest -q tests
+      - name: Compile Python sources
+        run: python -m compileall -q frontend worker shared scripts tests
+      - name: Run Python tests
+        run: python -m pytest -q tests
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '1.17.2'
