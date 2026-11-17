@@ -1,0 +1,13 @@
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#0d1320;color:#e8effd}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top right,#1e3150,#0d1320 62%)}
+.shell{max-width:1000px;margin:auto;padding:72px 22px 40px}.eyebrow{color:#89d3e0;font-weight:700;letter-spacing:3px;font-size:.75rem}
+h1{font-size:clamp(3.2rem,9vw,6rem);letter-spacing:-.07em;margin:10px 0}h1 span{color:#65cfd1}
+.subtitle{font-size:1.15rem;color:#b6c2d7;max-width:560px;line-height:1.6}
+.panel{margin-top:30px;background:#172238;border:1px solid #304058;border-radius:18px;padding:30px;box-shadow:0 15px 50px #0002}
+h2{font-size:1.4rem;margin:0 0 8px}.panel p{color:#b6c2d7}form{display:flex;gap:15px;flex-wrap:wrap;align-items:center;margin:22px 0}
+button,.pick{background:#61cfc5;color:#081622;font:inherit;font-weight:700;border:0;border-radius:10px;padding:12px 20px;cursor:pointer}
+input[type=file]{max-width:100%;font-size:.86rem}.secondary{background:#31455e;color:#e8effd}.row{display:flex;align-items:center;justify-content:space-between}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:15px;margin-top:18px}
+.card{display:flex;flex-direction:column;gap:8px;background:#0d192d;padding:12px;border-radius:10px;overflow-wrap:anywhere}
+.card img{height:130px;object-fit:contain;background:#060f1d;border-radius:6px}.card small{color:#9ec8d1}
+.error{color:#ffadb8!important}.ok{color:#99e7be!important}footer{padding:35px 0;color:#91a2ba;font-size:.85rem}

@@ -1,0 +1,20 @@
+digraph Before {
+  graph [label="BEFORE | COMPANY ABC — SINGLE-HOST IMAGE PLATFORM", labelloc=t, fontsize=21, fontname="DejaVu Sans", bgcolor="#f5f8fc", ranksep=.8, nodesep=.55];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=13, color="#c7d4e4", fillcolor="white", margin=".25,.16"];
+  edge [fontname="DejaVu Sans", color="#415977", fontsize=11, arrowsize=.8];
+  users [label="Internet users\n(upload + browse)", fillcolor="#d5f5ef"];
+  subgraph cluster_vm {
+    label="ONE ON-PREMISES / VM HOST  •  one failure domain";
+    style="rounded,dashed"; color="#a5b4c6";
+    web [label="Frontend website\n(HTTP / upload)", fillcolor="#dbecff"];
+    processing [label="Backend processor\n(local image operations)",fillcolor="#fff2d7"];
+    mysql [label="MySQL\n(app + image metadata)",fillcolor="#ffdddd"];
+    disk [label="Local filesystem\n(image binary files)",fillcolor="#ffdddd"];
+    web -> processing [label="local function / queue unknown"];
+    web -> mysql [label="local DB connection"];
+    processing -> mysql [label="local DB connection"];
+    web -> disk [label="write image"];
+    processing -> disk [label="read / update"];
+  }
+  users -> web [label="public web traffic"];
+}

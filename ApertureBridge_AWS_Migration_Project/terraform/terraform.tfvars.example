@@ -1,0 +1,16 @@
+aws_region             = "ap-south-1"
+environment            = "lab"
+project_slug           = "aperturebridge"
+worker_desired_count   = 0
+worker_image_tag       = "v1"
+lab_http_mode          = true
+cors_allowed_origins   = ["*"]
+ha_nat                 = false
+# For production, obtain a verified ACM certificate and set:
+# lab_http_mode          = false
+# acm_certificate_arn    = "arn:aws:acm:ap-south-1:ACCOUNT_ID:certificate/UUID"
+# cors_allowed_origins   = ["https://images.yourdomain.example"]
+# eb_min_instances       = 2
+# ha_nat                 = true
+# db_deletion_protection = true
+# db_final_snapshot     = true

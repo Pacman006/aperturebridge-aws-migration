@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ApertureBridge | Image Library</title><link rel="stylesheet" href="/static/style.css"></head>
+<body><main class="shell">
+<header><div class="eyebrow">IMAGE LIBRARY / AWS MIGRATION</div><h1>Aperture<span>Bridge</span></h1>
+<p class="subtitle">A small image portal rebuilt around reliable, event-driven cloud processing.</p></header>
+<section class="panel"><h2>Upload an image</h2><p>JPEG, PNG or WebP &middot; 10 MiB maximum</p>
+<form id="uploadForm"><label for="imageFile" class="pick">Choose image</label>
+<input id="imageFile" name="file" type="file" accept="image/jpeg,image/png,image/webp" required>
+<button type="submit">Add to library →</button></form><p id="feedback" role="status" aria-live="polite"></p></section>
+<section class="panel"><div class="row"><h2>Recent files</h2><button id="refresh" type="button" class="secondary">Refresh</button></div>
+<div id="assets" class="gallery"><p class="muted">Loading images…</p></div></section>
+<footer>Reference architecture: Elastic Beanstalk · S3 · SQS · ECS Fargate · Aurora MySQL</footer>
+</main><script>
+const isLocal = {{ 'true' if local_proxy else 'false' }};
+const $ = id => document.getElementById(id);
+function note(text, bad=false){$('feedback').textContent=text; $('feedback').className=bad?'error':'ok';}
+async function refresh(){
+ const parent=$('assets'); parent.replaceChildren();
+ try{const response=await fetch('/api/assets'); if(!response.ok)throw Error('Service unavailable');
+ const entries=await response.json(); if(!entries.length){parent.textContent='No uploads yet.';return;}
+ for(const entry of entries){const card=document.createElement('article');card.className='card';
+ if(entry.preview_url){let img=document.createElement('img'); img.src=entry.preview_url;img.alt=entry.name;img.loading='lazy';card.appendChild(img);}
+ let name=document.createElement('strong');name.textContent=entry.name;card.appendChild(name);
+ let status=document.createElement('small');status.textContent=entry.status;card.appendChild(status);parent.appendChild(card);}
+ }catch(err){parent.textContent='Could not retrieve images: '+err.message;}
+}
+$('uploadForm').addEventListener('submit',async event=>{event.preventDefault();const f=$('imageFile').files[0];if(!f)return;
+if(f.size>10*1024*1024||f.size===0){note('Choose an image up to 10 MiB.',true);return;}
+try{note('Sending image…');let response;
+if(isLocal){const form=new FormData();form.append('file',f);response=await fetch('/api/uploads/local',{method:'POST',body:form});}
+else{response=await fetch('/api/uploads/intents',{method:'POST',headers:{'Content-Type':'application/json'},
+ body:JSON.stringify({name:f.name,content_type:f.type,size:f.size})});
+if(!response.ok)throw Error((await response.json()).error||'Could not prepare upload');
+const intent=await response.json();const form=new FormData();for(const [k,v] of Object.entries(intent.upload.fields))form.append(k,v);
+form.append('file',f);response=await fetch(intent.upload.url,{method:'POST',body:form});
+if(!response.ok)throw Error('S3 upload failed; verify bucket CORS and HTTPS origin');
+}
+if(!response.ok)throw Error((await response.json()).error||'Upload rejected');
+note('Upload accepted. Processing normally finishes shortly.');$('uploadForm').reset();setTimeout(refresh,1500);
+}catch(err){note(err.message,true);}});
+$('refresh').addEventListener('click',refresh);refresh();setInterval(refresh,15000);
+</script></body></html>

@@ -1,0 +1,47 @@
+digraph Target {
+  graph [label="APERTUREBRIDGE | TARGET AWS REFERENCE ARCHITECTURE", labelloc=t, fontsize=23, fontname="DejaVu Sans", bgcolor="#f5f8fc", ranksep=.9, nodesep=.53, splines=polyline];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=12, color="#b9c9d9", fillcolor="white", margin=".22,.15"];
+  edge [fontname="DejaVu Sans", color="#415977", fontsize=10, arrowsize=.7];
+  user [label="Browser\nHTTPS 443 in production",fillcolor="#bdf3e5"];
+  legacy [label="Migrated legacy OVA → EC2\npublic IP, NO inbound access\nSSM for validation only",fillcolor="#f9e5c8"];
+  internet [label="Internet Gateway",fillcolor="#eff3fa"];
+  subgraph cluster_aws {
+    label="AWS REGION  •  example ap-south-1";
+    color="#4e6e8f"; style="rounded";
+    subgraph cluster_public {
+      label="PUBLIC SUBNETS  |  AZ-a and AZ-b"; color="#a7c4d8"; style="rounded,dashed";
+      alb [label="Elastic Beanstalk managed ALB\n443 / ACM (80 lab only)",fillcolor="#d8ebff"];
+      nat [label="NAT Gateway(s)\noutbound private subnet access",fillcolor="#e6f1ff"];
+    }
+    subgraph cluster_private {
+      label="PRIVATE APP SUBNETS  |  AZ-a and AZ-b"; color="#8facb8"; style="rounded,dashed";
+      eb [label="Elastic Beanstalk\nFlask web EC2\nHTTP 80 from ALB only",fillcolor="#d6e9ff"];
+      ecs [label="ECS Fargate\nthumbnail processor\nNO inbound ports",fillcolor="#e9e1ff"];
+    }
+    subgraph cluster_data {
+      label="ISOLATED DB SUBNETS  |  no route to Internet";color="#c0adb3"; style="rounded,dashed";
+      aurora [label="Aurora MySQL writer\nprivate TCP 3306 + TLS\n7-day automated backups",fillcolor="#ffeed7"];
+    }
+    s3 [label="S3 private bucket\nraw/  +  processed/\nSSE-S3, versioning, TLS",fillcolor="#d7f5df"];
+    sqs [label="SQS standard queue\nDLQ after 5 retries",fillcolor="#f6e6cc"];
+    sm [label="Secrets Manager\napp user + DB password",fillcolor="#fae3e9"];
+    ecr [label="ECR private images\nscan on push",fillcolor="#e9e1ff"];
+    logs [label="CloudWatch Logs\nECS + EB monitoring",fillcolor="#e9e8f6"];
+  }
+  user -> alb [label="GET / • API | TLS"];
+  alb -> eb [label="HTTP 80 SG→SG"];
+  user -> s3 [label="presigned POST\nHTTPS 443, Transfer Acceleration",color="#17876d",penwidth=2];
+  eb -> s3 [label="issue presigned POST / preview GET"];
+  eb -> aurora [label="SQL 3306/TLS"];
+  s3 -> sqs [label="ObjectCreated raw/*"];
+  sqs -> ecs [label="Receive + Delete / 443"];
+  ecs -> s3 [label="GET raw, PUT processed / 443"];
+  ecs -> aurora [label="SQL 3306/TLS"];
+  eb -> sm [label="GetSecretValue / 443"];
+  ecs -> sm [label="GetSecretValue / 443"];
+  ecr -> ecs [label="pull task image / 443"];
+  ecs -> logs [label="stdout / 443"];
+  eb -> logs [label="platform logs / 443"];
+  internet -> nat [style=dashed,label="egress"];
+  legacy -> internet [style=dashed,label="temporary migration validation"];
+}

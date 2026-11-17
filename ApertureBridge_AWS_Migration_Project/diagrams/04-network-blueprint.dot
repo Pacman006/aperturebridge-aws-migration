@@ -1,0 +1,23 @@
+digraph Network {
+  graph [label="NETWORK BLUEPRINT | VPC 10.32.0.0/16",labelloc=t,fontsize=22,fontname="DejaVu Sans",bgcolor="#f5f8fc",nodesep=.4,ranksep=.6];
+  node [shape=box,style="rounded,filled",fontname="DejaVu Sans",fontsize=12,fillcolor="white",color="#bdc9da",margin=".25,.16"];
+  edge [fontname="DejaVu Sans",fontsize=10,color="#475f77",arrowsize=.8];
+  internet [label="Internet\n0.0.0.0/0",fillcolor="#f1e3d7"];
+  igw [label="Internet Gateway",fillcolor="#e3effb"];
+  pub0 [label="Public AZ-A\n10.32.0.0/24\nALB, NAT-A, legacy VM",fillcolor="#cce8ff"];
+  pub1 [label="Public AZ-B\n10.32.1.0/24\nALB, optional NAT-B",fillcolor="#cce8ff"];
+  app0 [label="Private App AZ-A\n10.32.10.0/24\nEB instance / ECS task",fillcolor="#d9f0e4"];
+  app1 [label="Private App AZ-B\n10.32.11.0/24\nEB instance / ECS task",fillcolor="#d9f0e4"];
+  db0 [label="Isolated DB AZ-A\n10.32.20.0/24",fillcolor="#fce9dd"];
+  db1 [label="Isolated DB AZ-B\n10.32.21.0/24",fillcolor="#fce9dd"];
+  s3 [label="S3 gateway VPC endpoint\nassociated with app route tables",fillcolor="#d6eafb"];
+  internet -> igw [label="IGW route public only"];
+  igw -> pub0; igw -> pub1;
+  pub0 -> app0 [label="NAT egress only",style=dashed];
+  pub0 -> app1 [label="single NAT lab",style=dashed];
+  pub1 -> app1 [label="HA NAT option",style=dotted];
+  app0 -> db0 [label="only SG-to-SG TCP3306"];
+  app1 -> db1 [label="only SG-to-SG TCP3306"];
+  app0 -> s3 [label="443 route"];
+  app1 -> s3 [label="443 route"];
+}

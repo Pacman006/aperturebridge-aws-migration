@@ -1,0 +1,6 @@
+Flask>=3.1,<4
+boto3>=1.35,<2
+SQLAlchemy>=2.0,<3
+PyMySQL>=1.1,<2
+cryptography>=44,<48
+gunicorn>=23,<24

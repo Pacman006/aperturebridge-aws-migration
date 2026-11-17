@@ -1,0 +1,18 @@
+digraph Migration {
+  graph [label="APERTUREBRIDGE | MIGRATION WAVES & CUTOVER GATES",labelloc=t,fontsize=22,fontname="DejaVu Sans",rankdir=LR,bgcolor="#f5f8fc",nodesep=.55,ranksep=.65];
+  node [shape=box,style="rounded,filled",fontname="DejaVu Sans",fontsize=12,color="#c7d4e4",fillcolor="white",margin=".25,.17"];
+  edge [fontname="DejaVu Sans",fontsize=10,color="#425875",arrowsize=.8];
+  s0 [label="ASSESS\nInventory source VM, MySQL\nfiles, dependencies, RPO/RTO",fillcolor="#e7ebfb"];
+  s1 [label="STAGE 1\nContainerize backend\nS3 upload flow\nExport VALID OVA",fillcolor="#d9f0e4"];
+  s2 [label="FOUNDATION\nVPC, SGs, IAM, Aurora\nS3, SQS, ECR, EB",fillcolor="#dbeaff"];
+  s3 [label="MIGRATE\nVM Import→EC2 (temporary)\nMySQL→Aurora (DMS/backup)\nLegacy images→S3 acceleration",fillcolor="#fceccc"];
+  s4 [label="MODERNIZE\nPush backend→ECR/ECS\nApp schema init\nPublish frontend→EB",fillcolor="#e3ddff"];
+  s5 [label="VERIFY / CUTOVER\nRow counts, images, queues\nTLS, rollback drill, DNS",fillcolor="#d9f0e4"];
+  s6 [label="DECOMMISSION\nLegacy EC2, DMS task\nRemove migration IAM access",fillcolor="#e7ebfb"];
+  s0 -> s1 [label="inventory approved"];
+  s1 -> s2 [label="tests pass"];
+  s2 -> s3 [label="foundation healthy"];
+  s3 -> s4 [label="data reconciled"];
+  s4 -> s5 [label="live smoke tests"];
+  s5 -> s6 [label="sign-off + rollback window"];
+}

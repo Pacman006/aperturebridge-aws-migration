@@ -1,0 +1,38 @@
+name: validate-migration-reference
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  static-and-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            frontend/requirements.txt
+            worker/requirements.txt
+            requirements-dev.txt
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r frontend/requirements.txt -r worker/requirements.txt -r requirements-dev.txt
+      - name: Compile and test
+        run: |
+          python -m compileall -q frontend worker shared scripts tests
+          pytest -q tests
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.17.2'
+      - name: Normalize Terraform formatting
+        run: terraform fmt -recursive terraform
+      - name: Terraform validate (no credentials, no apply)
+        working-directory: terraform
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate

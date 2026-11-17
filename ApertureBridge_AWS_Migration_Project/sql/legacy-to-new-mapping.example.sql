@@ -1,0 +1,10 @@
+-- TEMPLATE ONLY: Source application schema was NOT supplied by the assignment.
+-- The new application's table is aperturebridge.assets (created by schema task).
+-- Historical rows should be mapped by an approved manifest from the legacy owner.
+-- Example mapping idea (not executable without known source columns):
+-- legacy_schema.images.image_id   -> manifest.legacy_id
+-- legacy_schema.images.file_path  -> manifest.local_path
+-- legacy_schema.images.file_name  -> manifest.filename
+-- legacy_schema.images.mime       -> manifest.content_type
+-- Run scripts/07-Backfill-Legacy.py from a VPC-connected host to populate
+-- the new metadata table and transfer raw/ objects with Transfer Acceleration.

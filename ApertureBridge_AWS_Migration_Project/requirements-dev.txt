@@ -1,0 +1,2 @@
+pytest>=8,<10
+moto[s3,sqs]>=5,<6

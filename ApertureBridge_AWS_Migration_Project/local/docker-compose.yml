@@ -1,0 +1,69 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: local-root-only
+      MYSQL_DATABASE: aperturebridge
+      MYSQL_USER: aperture_app
+      MYSQL_PASSWORD: local-password-only
+    ports: ["127.0.0.1:3307:3306"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  localstack:
+    image: localstack/localstack:4.8
+    environment:
+      SERVICES: s3,sqs
+      AWS_DEFAULT_REGION: ap-south-1
+      DEBUG: 0
+    ports: ["127.0.0.1:4566:4566"]
+    volumes:
+      - ./localstack/init:/etc/localstack/init/ready.d:ro
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json,urllib.request; d=json.load(urllib.request.urlopen('http://localhost:4566/_localstack/init/ready')); assert d['completed'] and d['scripts'] and all(x['state']=='SUCCESSFUL' for x in d['scripts'])"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  web:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile.local
+    ports: ["127.0.0.1:8080:8080"]
+    environment: &app-env
+      AWS_REGION: ap-south-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ENDPOINT_URL: http://localstack:4566
+      APP_BUCKET: aperturebridge-local-assets
+      DB_HOST: mysql
+      DB_NAME: aperturebridge
+      DB_USER: aperture_app
+      DB_PASSWORD: local-password-only
+      LOCAL_UPLOAD_PROXY: "true"
+      S3_ACCELERATE: "false"
+      PYTHONDONTWRITEBYTECODE: "1"
+    depends_on:
+      mysql: { condition: service_healthy }
+      localstack: { condition: service_healthy }
+  worker:
+    build:
+      context: ..
+      dockerfile: worker/Dockerfile
+    environment:
+      <<: *app-env
+      SQS_QUEUE_URL: http://localstack:4566/000000000000/aperturebridge-local-assets
+    depends_on:
+      mysql: { condition: service_healthy }
+      localstack: { condition: service_healthy }
+    restart: unless-stopped
+volumes:
+  mysql-data: {}
